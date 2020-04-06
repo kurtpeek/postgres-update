@@ -6,8 +6,9 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"gopkg.in/mgutz/dat.v1"
-	runner "gopkg.in/mgutz/dat.v1/sqlx-runner"
+
+	"gopkg.in/mgutz/dat.v2/dat"
+	runner "gopkg.in/mgutz/dat.v2/sqlx-runner"
 )
 
 // global database (pooling provided by SQL driver)
@@ -15,8 +16,12 @@ var DB *runner.DB
 
 func init() {
 	// create a normal database connection through database/sql
-	db, err := sql.Open("postgres", "dbname=dat_test user=dat password=!test host=localhost sslmode=disable")
+	db, err := sql.Open("postgres", "dbname=postgres user=postgres password=mypassword host=localhost sslmode=disable")
 	if err != nil {
+		panic(err)
+	}
+
+	if err := db.Ping(); err != nil {
 		panic(err)
 	}
 
@@ -52,10 +57,12 @@ type Post struct {
 
 func main() {
 	var post Post
-	err := DB.
+	if err := DB.
 		Select("id, title").
 		From("posts").
 		Where("id = $1", 13).
-		QueryStruct(&post)
+		QueryStruct(&post); err != nil {
+		panic(err)
+	}
 	fmt.Println("Title", post.Title)
 }
